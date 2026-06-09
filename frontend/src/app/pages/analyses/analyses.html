@@ -1,0 +1,52 @@
+<section class="history-page">
+  <header class="history-hero">
+    <div>
+      <p class="eyebrow">DecisionIQ</p>
+      <h1>Analysis History</h1>
+      <p>Review previous dataset analyses, decision scores, and processing status.</p>
+    </div>
+
+    <a routerLink="/upload" class="primary-action">Analyze New Dataset</a>
+  </header>
+
+  @if (isLoading()) {
+    <p class="loading">Loading analyses...</p>
+  } @else {
+    <section class="history-grid">
+      @for (item of analyses(); track item.analysisId) {
+        <a class="analysis-card" [routerLink]="['/analysis', item.analysisId]">
+          <div class="card-top">
+            <div>
+              <p class="card-label">{{ item.processingMode }}</p>
+              <h2>{{ item.datasetType || 'Unknown Dataset' }}</h2>
+            </div>
+
+            <span class="rating">{{ item.rating || 'Pending' }}</span>
+          </div>
+
+          <div class="score-row">
+            <div>
+              <span>Decision Score</span>
+              <strong>{{ item.decisionScore ?? '-' }}</strong>
+            </div>
+
+            <div>
+              <span>Quality</span>
+              <strong>{{ item.qualityScore ?? '-' }}</strong>
+            </div>
+
+            <div>
+              <span>Margin</span>
+              <strong>{{ item.profitMargin ?? '-' }}%</strong>
+            </div>
+          </div>
+
+          <div class="meta-row">
+            <span>{{ item.status }}</span>
+            <span>{{ item.createdAt }}</span>
+          </div>
+        </a>
+      }
+    </section>
+  }
+</section>

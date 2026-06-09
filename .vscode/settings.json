@@ -1,0 +1,10 @@
+{
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.aws-sam": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.aws-sam": true
+  }
+}

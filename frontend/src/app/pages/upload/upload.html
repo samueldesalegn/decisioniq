@@ -1,0 +1,33 @@
+<section class="upload-page">
+  <div class="upload-card">
+    <p class="eyebrow">DecisionIQ</p>
+    <h1>Upload a dataset</h1>
+    <p>
+      Upload a CSV file and DecisionIQ will generate KPIs, trends,
+      recommendations, risks, and an executive summary.
+    </p>
+
+    <label class="file-box">
+      <input type="file" accept=".csv,text/csv" (change)="onFileSelected($event)" />
+      <span>
+        @if (selectedFile()) {
+          {{ selectedFile()?.name }}
+        } @else {
+          Choose CSV file
+        }
+      </span>
+    </label>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <button (click)="analyze()" [disabled]="isUploading()">
+      @if (isUploading()) {
+        Analyzing...
+      } @else {
+        Upload & Analyze
+      }
+    </button>
+  </div>
+</section>

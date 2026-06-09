@@ -1,0 +1,254 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: DecisionIQ backend API
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: nodejs20.x
+    Architectures:
+      - x86_64
+    LoggingConfig:
+      LogFormat: JSON
+
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,PUT,OPTIONS'"
+      AllowHeaders: "'Content-Type,Authorization'"
+      AllowOrigin: "'http://localhost:4200'"
+
+Resources:
+
+  UploadBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - http://localhost:4200
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - HEAD
+            AllowedHeaders:
+              - '*'
+            ExposedHeaders:
+              - ETag
+            MaxAge: 3000
+
+  ResultBucket:
+    Type: AWS::S3::Bucket
+
+  AnalysisTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: DecisionIQAnalysis
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: analysisId
+          AttributeType: S
+        - AttributeName: fileHash
+          AttributeType: S
+      KeySchema:
+        - AttributeName: analysisId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: FileHashIndex
+          KeySchema:
+            - AttributeName: fileHash
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  HealthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: app.lambdaHandler
+      Events:
+        HealthApi:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - app.ts
+
+  UploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers/upload.handler
+      Environment:
+        Variables:
+          UPLOAD_BUCKET: !Ref UploadBucket
+          ANALYSIS_TABLE: !Ref AnalysisTable
+      Policies:
+        - S3WritePolicy:
+            BucketName: !Ref UploadBucket
+        - DynamoDBReadPolicy:
+            TableName: !Ref AnalysisTable
+      Events:
+        UploadApi:
+          Type: Api
+          Properties:
+            Path: /upload-url
+            Method: post
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - handlers/upload.ts
+
+  AnalyzeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers/analyze.handler
+      Environment:
+        Variables:
+          ANALYSIS_TABLE: !Ref AnalysisTable
+          RESULT_BUCKET: !Ref ResultBucket
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref UploadBucket
+        - S3WritePolicy:
+            BucketName: !Ref ResultBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AnalysisTable
+      Events:
+        AnalyzeApi:
+          Type: Api
+          Properties:
+            Path: /analyze
+            Method: post
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - handlers/analyze.ts
+
+  GetAnalysisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers/get-analysis.handler
+      Environment:
+        Variables:
+          ANALYSIS_TABLE: !Ref AnalysisTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref AnalysisTable
+        - S3ReadPolicy:
+            BucketName: !Ref ResultBucket
+      Events:
+        GetAnalysisApi:
+          Type: Api
+          Properties:
+            Path: /analysis/{analysisId}
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - handlers/get-analysis.ts
+
+  ListAnalysesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers/list-analyses.handler
+      Environment:
+        Variables:
+          ANALYSIS_TABLE: !Ref AnalysisTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref AnalysisTable
+      Events:
+        ListAnalysesApi:
+          Type: Api
+          Properties:
+            Path: /analyses
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - handlers/list-analyses.ts
+
+Outputs:
+
+  ApiUrl:
+    Description: DecisionIQ API Gateway endpoint URL
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+
+  HealthEndpoint:
+    Description: DecisionIQ Health endpoint
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/health"
+
+  UploadEndpoint:
+    Description: DecisionIQ Upload endpoint
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/upload-url"
+
+  AnalyzeEndpoint:
+    Description: DecisionIQ Analyze endpoint
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/analyze"
+
+  GetAnalysisEndpoint:
+    Description: DecisionIQ Get Analysis endpoint
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/analysis/{analysisId}"
+
+  ListAnalysesEndpoint:
+    Description: DecisionIQ List Analyses endpoint
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/analyses"
+
+  UploadBucketName:
+    Description: DecisionIQ Upload Bucket
+    Value: !Ref UploadBucket
+
+  ResultBucketName:
+    Description: DecisionIQ Result Bucket
+    Value: !Ref ResultBucket
+
+  AnalysisTableName:
+    Description: DecisionIQ Analysis Table
+    Value: !Ref AnalysisTable
+
+  HealthFunction:
+    Description: DecisionIQ Health Lambda ARN
+    Value: !GetAtt HealthFunction.Arn
+
+  UploadFunction:
+    Description: DecisionIQ Upload Lambda ARN
+    Value: !GetAtt UploadFunction.Arn
+
+  AnalyzeFunction:
+    Description: DecisionIQ Analyze Lambda ARN
+    Value: !GetAtt AnalyzeFunction.Arn
+
+  GetAnalysisFunction:
+    Description: DecisionIQ Get Analysis Lambda ARN
+    Value: !GetAtt GetAnalysisFunction.Arn
+
+  ListAnalysesFunction:
+    Description: DecisionIQ List Analyses Lambda ARN
+    Value: !GetAtt ListAnalysesFunction.Arn

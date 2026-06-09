@@ -1,0 +1,158 @@
+.analysis-page {
+  min-height: 100vh;
+  background: #0f172a;
+  color: #e5e7eb;
+  padding: 2rem;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  a {
+    color: #38bdf8;
+    text-decoration: none;
+    font-weight: 700;
+  }
+}
+
+.eyebrow {
+  color: #38bdf8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 800;
+}
+
+h1 {
+  font-size: clamp(2rem, 4vw, 4rem);
+  margin: 0;
+}
+
+.score-hero {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 2rem;
+  padding: 2rem;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #111827, #1e293b);
+  border: 1px solid #334155;
+  margin-bottom: 2rem;
+
+  strong {
+    display: block;
+    font-size: 5rem;
+    color: #38bdf8;
+    line-height: 1;
+  }
+
+  p {
+    color: #cbd5e1;
+    line-height: 1.8;
+  }
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  article {
+    background: #111827;
+    border: 1px solid #334155;
+    border-radius: 18px;
+    padding: 1.3rem;
+  }
+
+  span {
+    color: #94a3b8;
+  }
+
+  strong {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 1.6rem;
+  }
+}
+
+.panel {
+  background: #111827;
+  border: 1px solid #334155;
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  h2 {
+    margin-top: 0;
+  }
+
+  li {
+    margin-bottom: 0.8rem;
+    line-height: 1.6;
+  }
+}
+
+.trend-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+
+  div {
+    background: #0f172a;
+    border-radius: 16px;
+    padding: 1rem;
+  }
+
+  strong {
+    display: block;
+    font-size: 1.6rem;
+    text-transform: capitalize;
+    color: #38bdf8;
+  }
+}
+
+.two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.risk {
+  border-color: #f97316;
+}
+
+.loading {
+  color: #cbd5e1;
+}
+
+@media (max-width: 900px) {
+  .score-hero,
+  .two-column,
+  .kpi-grid,
+  .trend-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-panel {
+  min-height: 420px;
+
+  canvas {
+    width: 100%;
+    max-height: 380px;
+  }
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  h2 {
+    margin: 0.3rem 0 0;
+  }
+}

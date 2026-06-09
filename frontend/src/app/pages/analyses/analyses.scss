@@ -1,0 +1,142 @@
+.history-page {
+  min-height: 100vh;
+  background: #0f172a;
+  color: #e5e7eb;
+  padding: 2.5rem;
+}
+
+.history-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    margin: 0.4rem 0;
+  }
+
+  p {
+    color: #cbd5e1;
+  }
+}
+
+.eyebrow {
+  color: #38bdf8;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 800;
+}
+
+.primary-action {
+  background: #38bdf8;
+  color: #082f49;
+  text-decoration: none;
+  font-weight: 900;
+  padding: 0.9rem 1.2rem;
+  border-radius: 14px;
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.25rem;
+}
+
+.analysis-card {
+  background: linear-gradient(135deg, #111827, #1e293b);
+  border: 1px solid #334155;
+  border-radius: 22px;
+  padding: 1.5rem;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: #38bdf8;
+  }
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+
+  h2 {
+    margin: 0.3rem 0 0;
+  }
+}
+
+.card-label {
+  color: #38bdf8;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.rating {
+  height: fit-content;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.score-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+
+  div {
+    background: #0f172a;
+    border: 1px solid #243044;
+    border-radius: 16px;
+    padding: 1rem;
+  }
+
+  span {
+    display: block;
+    color: #94a3b8;
+    font-size: 0.85rem;
+  }
+
+  strong {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 1.5rem;
+  }
+}
+
+.meta-row {
+  margin-top: 1.3rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.loading {
+  color: #cbd5e1;
+}
+
+@media (max-width: 700px) {
+  .history-page {
+    padding: 1.25rem;
+  }
+
+  .history-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .score-row {
+    grid-template-columns: 1fr;
+  }
+}
