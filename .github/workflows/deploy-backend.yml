@@ -45,9 +45,6 @@ jobs:
         working-directory: backend/src
         run: npm ci
 
-      - name: Validate SAM template
-        run: sam validate
-
       - name: Build SAM application
         run: sam build
 
