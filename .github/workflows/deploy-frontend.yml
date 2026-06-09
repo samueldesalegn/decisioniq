@@ -48,6 +48,51 @@ jobs:
         run: |
           aws s3 sync dist/frontend/browser s3://decisioniq-frontend-samuel --delete
 
+      - name: Set content type and cache for JavaScript
+        run: |
+          aws s3 cp \
+            s3://decisioniq-frontend-samuel \
+            s3://decisioniq-frontend-samuel \
+            --recursive \
+            --exclude "*" \
+            --include "*.js" \
+            --metadata-directive REPLACE \
+            --content-type "application/javascript" \
+            --cache-control "public,max-age=31536000,immutable"
+
+      - name: Set content type and cache for CSS
+        run: |
+          aws s3 cp \
+            s3://decisioniq-frontend-samuel \
+            s3://decisioniq-frontend-samuel \
+            --recursive \
+            --exclude "*" \
+            --include "*.css" \
+            --metadata-directive REPLACE \
+            --content-type "text/css" \
+            --cache-control "public,max-age=31536000,immutable"
+
+      - name: Set content type and cache for JSON
+        run: |
+          aws s3 cp \
+            s3://decisioniq-frontend-samuel \
+            s3://decisioniq-frontend-samuel \
+            --recursive \
+            --exclude "*" \
+            --include "*.json" \
+            --metadata-directive REPLACE \
+            --content-type "application/json" \
+            --cache-control "public,max-age=31536000,immutable"
+
+      - name: Set content type for favicon
+        run: |
+          aws s3 cp \
+            s3://decisioniq-frontend-samuel/favicon.ico \
+            s3://decisioniq-frontend-samuel/favicon.ico \
+            --metadata-directive REPLACE \
+            --content-type "image/x-icon" \
+            --cache-control "public,max-age=31536000,immutable"
+
       - name: Disable cache for index.html
         run: |
           aws s3 cp \
@@ -56,13 +101,3 @@ jobs:
             --metadata-directive REPLACE \
             --cache-control "no-cache,no-store,must-revalidate,max-age=0" \
             --content-type "text/html"
-
-      - name: Cache static assets
-        run: |
-          aws s3 cp \
-            s3://decisioniq-frontend-samuel \
-            s3://decisioniq-frontend-samuel \
-            --recursive \
-            --exclude "index.html" \
-            --cache-control "public,max-age=31536000,immutable" \
-            --metadata-directive REPLACE
