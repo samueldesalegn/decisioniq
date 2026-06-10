@@ -1,23 +1,43 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ApiService {
   private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
 
   private readonly apiUrl = 'https://2wdb1i9pj6.execute-api.us-east-1.amazonaws.com/Prod';
+
+  private getAuthHeaders() {
+    const token = this.auth.getAccessToken();
+
+    if (!token) {
+      return {};
+    }
+
+    return {
+      headers: new HttpHeaders({
+        Authorization: `Bearer ${token}`,
+      }),
+    };
+  }
 
   getUploadUrl(fileName: string, contentType: string) {
     return this.http.post<{
       datasetId: string;
       uploadUrl: string;
       key: string;
-    }>(`${this.apiUrl}/upload-url`, {
-      fileName,
-      contentType,
-    });
+    }>(
+      `${this.apiUrl}/upload-url`,
+      {
+        fileName,
+        contentType,
+      },
+      this.getAuthHeaders(),
+    );
   }
 
   uploadFile(uploadUrl: string, file: File) {
@@ -36,17 +56,21 @@ export class ApiService {
       processingMode: string;
       resultLocation: unknown;
       summary: unknown;
-    }>(`${this.apiUrl}/analyze`, {
-      bucket,
-      key,
-    });
+    }>(
+      `${this.apiUrl}/analyze`,
+      {
+        bucket,
+        key,
+      },
+      this.getAuthHeaders(),
+    );
   }
 
   getAnalysis(analysisId: string) {
-    return this.http.get(`${this.apiUrl}/analysis/${analysisId}`);
+    return this.http.get(`${this.apiUrl}/analysis/${analysisId}`, this.getAuthHeaders());
   }
 
   listAnalyses() {
-    return this.http.get(`${this.apiUrl}/analyses`);
+    return this.http.get(`${this.apiUrl}/analyses`, this.getAuthHeaders());
   }
 }

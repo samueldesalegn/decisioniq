@@ -15,7 +15,7 @@ Globals:
     Cors:
       AllowMethods: "'GET,POST,PUT,OPTIONS'"
       AllowHeaders: "'Content-Type,Authorization'"
-      AllowOrigin: "'http://localhost:4200'"
+      AllowOrigin: "'https://decisioniq.sdcloudhub.com'"
     Auth:
       DefaultAuthorizer: DecisionIQCognitoAuthorizer
       AddDefaultAuthorizerToCorsPreflight: false
@@ -51,7 +51,7 @@ Resources:
       CorsConfiguration:
         CorsRules:
           - AllowedOrigins:
-              - http://localhost:4200
+              - https://decisioniq.sdcloudhub.com
             AllowedMethods:
               - GET
               - PUT

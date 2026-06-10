@@ -1,7 +1,9 @@
 import { Injectable, computed, signal } from '@angular/core';
 
 const cognitoDomain = 'https://decisioniq-auth-samuel.auth.us-east-1.amazoncognito.com';
+
 const clientId = '4ttq9gorgkqcoip5ea2ssql0mv';
+
 const localRedirectUri = 'http://localhost:4200';
 const prodRedirectUri = 'https://decisioniq.sdcloudhub.com';
 
@@ -9,22 +11,27 @@ const prodRedirectUri = 'https://decisioniq.sdcloudhub.com';
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly tokenKey = 'decisioniq_id_token';
+  private readonly idTokenKey = 'decisioniq_id_token';
+  private readonly accessTokenKey = 'decisioniq_access_token';
   private readonly codeVerifierKey = 'decisioniq_code_verifier';
 
-  readonly idToken = signal<string | null>(
-    (() => {
-      const token = localStorage.getItem('decisioniq_id_token');
-      if (token && !AuthService.isTokenExpired(token)) return token;
-      localStorage.removeItem('decisioniq_id_token');
-      return null;
-    })(),
-  );
+  readonly idToken = signal<string | null>(this.getValidStoredToken(this.idTokenKey));
 
   readonly isAuthenticated = computed(() => !!this.idToken());
 
   private get redirectUri(): string {
     return window.location.origin.includes('localhost') ? localRedirectUri : prodRedirectUri;
+  }
+
+  private getValidStoredToken(key: string): string | null {
+    const token = localStorage.getItem(key);
+
+    if (token && !AuthService.isTokenExpired(token)) {
+      return token;
+    }
+
+    localStorage.removeItem(key);
+    return null;
   }
 
   private static isTokenExpired(token: string): boolean {
@@ -38,6 +45,7 @@ export class AuthService {
 
   private generateRandomString(length: number): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+
     return Array.from(crypto.getRandomValues(new Uint8Array(length)))
       .map((b) => chars[b % chars.length])
       .join('');
@@ -46,6 +54,7 @@ export class AuthService {
   private async generateCodeChallenge(verifier: string): Promise<string> {
     const encoded = new TextEncoder().encode(verifier);
     const digest = await crypto.subtle.digest('SHA-256', encoded);
+
     return btoa(String.fromCharCode(...new Uint8Array(digest)))
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
@@ -59,7 +68,7 @@ export class AuthService {
     sessionStorage.setItem(this.codeVerifierKey, codeVerifier);
 
     const url =
-      `${cognitoDomain}/oauth2/authorize?` + // ← changed from /login
+      `${cognitoDomain}/oauth2/authorize?` +
       `client_id=${clientId}` +
       `&response_type=code` +
       `&scope=openid+email+profile` +
@@ -71,8 +80,10 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.idTokenKey);
+    localStorage.removeItem(this.accessTokenKey);
     sessionStorage.removeItem(this.codeVerifierKey);
+
     this.idToken.set(null);
 
     const url =
@@ -87,17 +98,22 @@ export class AuthService {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
 
-    if (!code) return;
+    if (!code) {
+      return;
+    }
 
     const codeVerifier = sessionStorage.getItem(this.codeVerifierKey);
+
     if (!codeVerifier) {
-      console.error('No code verifier found — possible CSRF or session loss');
+      console.error('No code verifier found.');
       return;
     }
 
     const response = await fetch(`${cognitoDomain}/oauth2/token`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         client_id: clientId,
@@ -113,21 +129,27 @@ export class AuthService {
     }
 
     const tokens = await response.json();
-    const idToken = tokens.id_token;
 
-    if (!idToken) {
-      console.error('No id_token in response');
+    if (!tokens.id_token || !tokens.access_token) {
+      console.error('Missing tokens in Cognito response:', tokens);
       return;
     }
 
     sessionStorage.removeItem(this.codeVerifierKey);
-    localStorage.setItem(this.tokenKey, idToken);
-    this.idToken.set(idToken);
+
+    localStorage.setItem(this.idTokenKey, tokens.id_token);
+    localStorage.setItem(this.accessTokenKey, tokens.access_token);
+
+    this.idToken.set(tokens.id_token);
 
     window.history.replaceState({}, document.title, '/analyses');
   }
 
-  getToken(): string | null {
-    return this.idToken();
+  getIdToken(): string | null {
+    return this.getValidStoredToken(this.idTokenKey);
+  }
+
+  getAccessToken(): string | null {
+    return this.getValidStoredToken(this.accessTokenKey);
   }
 }
