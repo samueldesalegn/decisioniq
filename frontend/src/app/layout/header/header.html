@@ -8,19 +8,19 @@
 
   <div class="right">
 
+    <a routerLink="/dashboard">
+      Dashboard
+    </a>
+
+    <a routerLink="/analyses">
+      History
+    </a>
+
+    <a routerLink="/upload">
+      Upload
+    </a>
+
     @if (isAuthenticated()) {
-
-      <a routerLink="/dashboard">
-        Dashboard
-      </a>
-
-      <a routerLink="/analyses">
-        History
-      </a>
-
-      <a routerLink="/upload">
-        Upload
-      </a>
 
       <button
         class="logout-btn"

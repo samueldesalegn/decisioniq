@@ -162,6 +162,8 @@ Resources:
           Properties:
             Path: /analyze
             Method: post
+            Auth:
+              Authorizer: NONE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -190,6 +192,8 @@ Resources:
           Properties:
             Path: /analysis/{analysisId}
             Method: get
+            Auth:
+              Authorizer: NONE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -216,6 +220,8 @@ Resources:
           Properties:
             Path: /analyses
             Method: get
+            Auth:
+              Authorizer: NONE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
