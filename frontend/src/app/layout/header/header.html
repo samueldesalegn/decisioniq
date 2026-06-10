@@ -1,0 +1,43 @@
+<header class="header">
+
+  <div class="left">
+    <a class="logo" routerLink="/">
+      DecisionIQ
+    </a>
+  </div>
+
+  <div class="right">
+
+    @if (isAuthenticated()) {
+
+      <a routerLink="/dashboard">
+        Dashboard
+      </a>
+
+      <a routerLink="/analyses">
+        History
+      </a>
+
+      <a routerLink="/upload">
+        Upload
+      </a>
+
+      <button
+        class="logout-btn"
+        (click)="auth.logout()">
+        Logout
+      </button>
+
+    } @else {
+
+      <button
+        class="login-btn"
+        (click)="auth.login()">
+        Login
+      </button>
+
+    }
+
+  </div>
+
+</header>

@@ -5,7 +5,7 @@ Description: DecisionIQ backend API
 Globals:
   Function:
     Timeout: 10
-    Runtime: nodejs24.x
+    Runtime: nodejs20.x
     Architectures:
       - x86_64
     LoggingConfig:
@@ -16,8 +16,34 @@ Globals:
       AllowMethods: "'GET,POST,PUT,OPTIONS'"
       AllowHeaders: "'Content-Type,Authorization'"
       AllowOrigin: "'http://localhost:4200'"
+    Auth:
+      DefaultAuthorizer: DecisionIQCognitoAuthorizer
+      AddDefaultAuthorizerToCorsPreflight: false
+      Authorizers:
+        DecisionIQCognitoAuthorizer:
+          UserPoolArn: !GetAtt DecisionIQUserPool.Arn
 
 Resources:
+
+  DecisionIQUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: DecisionIQUserPool
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+
+  DecisionIQUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: DecisionIQWebClient
+      UserPoolId: !Ref DecisionIQUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
 
   UploadBucket:
     Type: AWS::S3::Bucket
@@ -72,6 +98,8 @@ Resources:
           Properties:
             Path: /health
             Method: get
+            Auth:
+              Authorizer: NONE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -101,6 +129,8 @@ Resources:
           Properties:
             Path: /upload-url
             Method: post
+            Auth:
+              Authorizer: NONE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -232,6 +262,18 @@ Outputs:
   AnalysisTableName:
     Description: DecisionIQ Analysis Table
     Value: !Ref AnalysisTable
+
+  CognitoUserPoolId:
+    Description: DecisionIQ Cognito User Pool ID
+    Value: !Ref DecisionIQUserPool
+
+  CognitoUserPoolClientId:
+    Description: DecisionIQ Cognito User Pool Client ID
+    Value: !Ref DecisionIQUserPoolClient
+
+  CognitoUserPoolArn:
+    Description: DecisionIQ Cognito User Pool ARN
+    Value: !GetAtt DecisionIQUserPool.Arn
 
   HealthFunction:
     Description: DecisionIQ Health Lambda ARN
