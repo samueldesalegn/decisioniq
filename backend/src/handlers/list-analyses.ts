@@ -1,11 +1,17 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { listAnalysisMetadata } from '../repositories/analysis.repository';
+import { listAnalysisMetadataByUser } from '../repositories/analysis.repository';
+import { getUserIdFromEvent } from '../utils/auth.util';
 import { failure, success } from '../utils/http-response.util';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const handler = async (_event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
-        const items = await listAnalysisMetadata();
+        const userId = getUserIdFromEvent(event);
+
+        if (!userId) {
+            return failure('Unauthorized', 401);
+        }
+
+        const items = await listAnalysisMetadataByUser(userId);
 
         const analyses = items
             .map((item) => ({

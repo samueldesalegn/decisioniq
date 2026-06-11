@@ -14,6 +14,7 @@ import { calculateDecisionScore } from '../services/decision-score.service';
 import { calculateTrends } from '../services/trend.service';
 import { failure, success } from '../utils/http-response.util';
 import { buildTrendSeries } from '../services/trend-series.service';
+import { getUserIdFromEvent } from '../utils/auth.util';
 
 const LARGE_FILE_THRESHOLD_BYTES = 50 * 1024 * 1024;
 
@@ -25,7 +26,13 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             return failure('bucket and key are required', 400);
         }
 
-        const fileHash: string | undefined = body.fileHash; // ← read fileHash from request
+        const userId = getUserIdFromEvent(event); // ← extract user from JWT
+
+        if (!userId) {
+            return failure('Unauthorized', 401);
+        }
+
+        const fileHash: string | undefined = body.fileHash;
 
         const fileSizeBytes = await getS3ObjectSize(body.bucket, body.key);
 
@@ -35,13 +42,14 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
             await saveAnalysisMetadata({
                 analysisId,
+                userId, // ← scope queued analysis to user
                 datasetKey: body.key,
                 bucket: body.bucket,
                 status: 'QUEUED',
                 processingMode: 'BIG_DATA',
                 fileSizeBytes,
                 createdAt,
-                ...(fileHash ? { fileHash } : {}), // ← persist hash so dedup works even for queued jobs
+                ...(fileHash ? { fileHash } : {}),
             });
 
             return success(
@@ -91,12 +99,13 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         };
 
         const resultBucket = process.env.RESULT_BUCKET || '';
-        const resultKey = `analysis-results/${analysisId}.json`;
+        const resultKey = `analysis-results/${userId}/${analysisId}.json`; // ← result path scoped per user
 
         await writeJsonToS3(resultBucket, resultKey, result);
 
         await saveAnalysisMetadata({
             analysisId,
+            userId, // ← scope completed analysis to user
             datasetKey: body.key,
             bucket: body.bucket,
             status: 'COMPLETED',
@@ -104,7 +113,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             fileSizeBytes,
             createdAt,
 
-            ...(fileHash ? { fileHash } : {}), // ← persist hash for future dedup lookups
+            ...(fileHash ? { fileHash } : {}),
 
             datasetType: profile.datasetType,
             decisionScore: decisionScore.score,

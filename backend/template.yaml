@@ -52,7 +52,7 @@ Resources:
         CorsRules:
           - AllowedOrigins:
               - https://decisioniq.sdcloudhub.com
-              - http://localhost:4200           # ← add for local dev
+              - http://localhost:4200
             AllowedMethods:
               - GET
               - PUT
@@ -75,7 +75,9 @@ Resources:
       AttributeDefinitions:
         - AttributeName: analysisId
           AttributeType: S
-        - AttributeName: fileHash        # ← required for GSI
+        - AttributeName: fileHash
+          AttributeType: S
+        - AttributeName: userId
           AttributeType: S
       KeySchema:
         - AttributeName: analysisId
@@ -84,6 +86,12 @@ Resources:
         - IndexName: FileHashIndex
           KeySchema:
             - AttributeName: fileHash
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: UserIdIndex
+          KeySchema:
+            - AttributeName: userId
               KeyType: HASH
           Projection:
             ProjectionType: ALL
@@ -122,7 +130,7 @@ Resources:
       Policies:
         - S3WritePolicy:
             BucketName: !Ref UploadBucket
-        - DynamoDBReadPolicy:             # ← needs read to query FileHashIndex
+        - DynamoDBReadPolicy:
             TableName: !Ref AnalysisTable
       Events:
         UploadApi:
@@ -130,8 +138,6 @@ Resources:
           Properties:
             Path: /upload-url
             Method: post
-            Auth:
-              Authorizer: NONE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -163,8 +169,6 @@ Resources:
           Properties:
             Path: /analyze
             Method: post
-            Auth:
-              Authorizer: NONE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -193,8 +197,6 @@ Resources:
           Properties:
             Path: /analysis/{analysisId}
             Method: get
-            Auth:
-              Authorizer: NONE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -221,8 +223,6 @@ Resources:
           Properties:
             Path: /analyses
             Method: get
-            Auth:
-              Authorizer: NONE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:

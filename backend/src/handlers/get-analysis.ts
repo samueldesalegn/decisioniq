@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { getAnalysisMetadata } from '../repositories/analysis.repository';
 import { readJsonFromS3 } from '../services/s3.service';
+import { getUserIdFromEvent } from '../utils/auth.util';
 import { failure, success } from '../utils/http-response.util';
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -11,10 +12,21 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             return failure('analysisId is required', 400);
         }
 
+        const userId = getUserIdFromEvent(event);
+
+        if (!userId) {
+            return failure('Unauthorized', 401);
+        }
+
         const metadata = await getAnalysisMetadata(analysisId);
 
         if (!metadata) {
             return failure('Analysis not found', 404);
+        }
+
+        // Ownership check — users can only access their own analyses
+        if (metadata.userId !== userId) {
+            return failure('Forbidden', 403);
         }
 
         if (metadata.status === 'QUEUED') {

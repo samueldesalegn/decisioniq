@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 const client = new DynamoDBClient({});
 
@@ -29,11 +29,20 @@ export async function getAnalysisMetadata(analysisId: string): Promise<Record<st
     return response.Item;
 }
 
-export async function listAnalysisMetadata(): Promise<Record<string, unknown>[]> {
+/**
+ * List analyses belonging to a specific user.
+ * Uses the "UserIdIndex" GSI — Query, not Scan.
+ */
+export async function listAnalysisMetadataByUser(userId: string): Promise<Record<string, unknown>[]> {
     const response = await docClient.send(
-        new ScanCommand({
+        new QueryCommand({
             TableName: tableName,
-            Limit: 50,
+            IndexName: 'UserIdIndex',
+            KeyConditionExpression: 'userId = :userId',
+            ExpressionAttributeValues: {
+                ':userId': userId,
+            },
+            Limit: 100,
         }),
     );
 
@@ -41,19 +50,23 @@ export async function listAnalysisMetadata(): Promise<Record<string, unknown>[]>
 }
 
 /**
- * Find an existing analysis by file hash.
- * Requires a GSI named "FileHashIndex".
+ * Find an existing analysis by file hash, scoped to the requesting user.
+ * Requires the "FileHashIndex" GSI.
  */
-export async function findAnalysisByFileHash(fileHash: string): Promise<Record<string, unknown> | undefined> {
+export async function findAnalysisByFileHashAndUser(
+    fileHash: string,
+    userId: string,
+): Promise<Record<string, unknown> | undefined> {
     const response = await docClient.send(
         new QueryCommand({
             TableName: tableName,
             IndexName: 'FileHashIndex',
             KeyConditionExpression: 'fileHash = :fileHash',
+            FilterExpression: 'userId = :userId',
             ExpressionAttributeValues: {
                 ':fileHash': fileHash,
+                ':userId': userId,
             },
-            Limit: 1,
         }),
     );
 

@@ -12,7 +12,7 @@ export class ApiService {
   private readonly apiUrl = 'https://2wdb1i9pj6.execute-api.us-east-1.amazonaws.com/Prod';
 
   private getAuthHeaders() {
-    const token = this.auth.getAccessToken();
+    const token = this.auth.getIdToken(); // ← was getAccessToken() — API Gateway Cognito authorizer validates ID tokens
 
     if (!token) {
       return {};
