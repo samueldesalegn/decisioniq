@@ -1,46 +1,61 @@
-<section class="dashboard">
-
-  <a class="logo" routerLink="/dashboard">
-  DecisionIQ
-</a>
-
-  <h1>
-    Dashboard
-  </h1>
-
-  <p class="subtitle">
-    AI-powered business intelligence and dataset analytics.
-  </p>
-
-  <div class="stats">
-
-    <div class="card">
-      <h3>Total Analyses</h3>
-      <h2>0</h2>
-    </div>
-
-    <div class="card">
-      <h3>Average Score</h3>
-      <h2>--</h2>
-    </div>
-
-    <div class="card">
-      <h3>Latest Status</h3>
-      <h2>Ready</h2>
-    </div>
-
+<section class="dashboard-page">
+  <div class="dashboard-hero">
+    <p class="eyebrow">DecisionIQ Dashboard</p>
+    <h1>Your analytics command center.</h1>
+    <p>
+      Track uploaded datasets, decision scores, analysis quality, and recent business insights.
+    </p>
   </div>
 
-  <div class="actions">
+  <section class="stats-grid">
+    <article class="stat-card">
+      <span>Total Analyses</span>
+      <strong>1</strong>
+      <p>Completed dataset reviews</p>
+    </article>
 
-    <a routerLink="/upload" class="primary">
-      Upload Dataset
-    </a>
+    <article class="stat-card">
+      <span>Average Score</span>
+      <strong>80</strong>
+      <p>Overall decision strength</p>
+    </article>
 
-    <a routerLink="/analyses" class="secondary">
-      View History
-    </a>
+    <article class="stat-card">
+      <span>Strong Results</span>
+      <strong>1</strong>
+      <p>High-confidence analyses</p>
+    </article>
 
-  </div>
+    <article class="stat-card">
+      <span>Latest Status</span>
+      <strong>Ready</strong>
+      <p>System available</p>
+    </article>
+  </section>
 
+  <section class="dashboard-panels">
+    <article class="panel">
+      <p class="eyebrow">Recent Analysis</p>
+      <h2>Business Performance</h2>
+      <p>
+        Latest dataset analysis returned a strong score with healthy margin and full data quality.
+      </p>
+
+      <a routerLink="/analyses" class="panel-link">
+        View history →
+      </a>
+    </article>
+
+    <article class="panel">
+      <p class="eyebrow">Next Step</p>
+      <h2>Upload a new dataset</h2>
+      <p>
+        Analyze another CSV file to generate KPIs, risks, recommendations, and executive summaries.
+      </p>
+
+      <a routerLink="/upload" class="primary-link">
+        Upload dataset →
+      </a>
+    </article>
+  </section>
 </section>

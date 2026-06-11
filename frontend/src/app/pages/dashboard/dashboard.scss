@@ -1,67 +1,91 @@
-.dashboard {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 3rem;
+.dashboard-page {
+  min-height: calc(100vh - 90px);
+  padding: 4rem;
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.dashboard-hero {
+  max-width: 900px;
+  margin-bottom: 3rem;
+
+  h1 {
+    font-size: clamp(3rem, 7vw, 6rem);
+    line-height: 1;
+    margin: 1rem 0;
+  }
+
+  p {
+    color: #cbd5e1;
+    font-size: 1.15rem;
+    line-height: 1.8;
+  }
 }
 
 .eyebrow {
-  color: #4fc3ff;
-  letter-spacing: 3px;
+  color: #38bdf8;
   text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 800;
 }
 
-h1 {
-  font-size: 4rem;
-  margin: 1rem 0;
-}
-
-.subtitle {
-  color: #bbb;
-  margin-bottom: 3rem;
-}
-
-.stats {
+.stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
 }
 
-.card {
-  background: #09152e;
-  border: 1px solid #1f3558;
-  border-radius: 16px;
+.stat-card,
+.panel {
+  background: #111c31;
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  border-radius: 22px;
   padding: 2rem;
 }
 
-.card h3 {
-  color: #aaa;
-  font-weight: normal;
+.stat-card span {
+  color: #cbd5e1;
 }
 
-.card h2 {
+.stat-card strong {
+  display: block;
+  margin: 1rem 0;
+  font-size: 3rem;
+  color: #38bdf8;
+}
+
+.stat-card p,
+.panel p {
+  color: #cbd5e1;
+}
+
+.dashboard-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.panel h2 {
+  font-size: 2rem;
+}
+
+.panel-link,
+.primary-link {
+  display: inline-block;
   margin-top: 1rem;
-  font-size: 2.5rem;
-}
-
-.actions {
-  margin-top: 3rem;
-  display: flex;
-  gap: 1rem;
-}
-
-.primary,
-.secondary {
+  color: #38bdf8;
   text-decoration: none;
-  padding: 1rem 1.8rem;
-  border-radius: 10px;
+  font-weight: 800;
 }
 
-.primary {
-  background: #3ebeff;
-  color: black;
-}
+@media (max-width: 1000px) {
+  .stats-grid,
+  .dashboard-panels {
+    grid-template-columns: 1fr;
+  }
 
-.secondary {
-  border: 1px solid #3ebeff;
-  color: #3ebeff;
+  .dashboard-page {
+    padding: 2rem;
+  }
 }
