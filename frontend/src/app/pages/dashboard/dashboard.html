@@ -37,9 +37,9 @@
       </article>
 
       <article class="stat-card">
-        <span>High Risk</span>
-        <strong>{{ highRiskCount() }}</strong>
-        <p>Flagged for attention</p>
+        <span>Weak Results</span>
+        <strong>{{ weakCount() }}</strong>
+        <p>Analyses requiring attention</p>
       </article>
 
       @if (topDatasetType()) {
@@ -56,6 +56,7 @@
         <p class="eyebrow">Latest Analysis</p>
         @if (latestAnalysis()) {
           <h2>{{ latestAnalysis()!.datasetType ?? 'Dataset' }}</h2>
+          <p>Dataset: <strong>{{ getDatasetName(latestAnalysis()!) }}</strong></p>
           <p>
             Score: <strong>{{ latestAnalysis()!.decisionScore ?? '—' }}</strong>
             &nbsp;·&nbsp;
