@@ -152,10 +152,13 @@ Resources:
     Properties:
       CodeUri: src/
       Handler: handlers/analyze.handler
+      Timeout: 60
       Environment:
         Variables:
           ANALYSIS_TABLE: !Ref AnalysisTable
           RESULT_BUCKET: !Ref ResultBucket
+          BEDROCK_REGION: us-east-1
+          BEDROCK_MODEL_ID: us.anthropic.claude-sonnet-4-6
       Policies:
         - S3ReadPolicy:
             BucketName: !Ref UploadBucket
@@ -163,6 +166,11 @@ Resources:
             BucketName: !Ref ResultBucket
         - DynamoDBCrudPolicy:
             TableName: !Ref AnalysisTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: '*'
       Events:
         AnalyzeApi:
           Type: Api

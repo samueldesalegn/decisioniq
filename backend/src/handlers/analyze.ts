@@ -26,7 +26,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             return failure('bucket and key are required', 400);
         }
 
-        const userId = getUserIdFromEvent(event); // ← extract user from JWT
+        const userId = getUserIdFromEvent(event);
 
         if (!userId) {
             return failure('Unauthorized', 401);
@@ -42,7 +42,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
             await saveAnalysisMetadata({
                 analysisId,
-                userId, // ← scope queued analysis to user
+                userId,
                 datasetKey: body.key,
                 bucket: body.bucket,
                 status: 'QUEUED',
@@ -75,8 +75,9 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         const decisionScore = calculateDecisionScore(profile, businessKPIs);
         const trends = calculateTrends(rows, profile.numericColumns);
         const insights = generateInsights(businessKPIs, trends);
-        const executiveSummary = generateExecutiveSummary(profile, businessKPIs, insights);
-        const trendSeries = buildTrendSeries(rows);
+        const trendSeries = buildTrendSeries(rows); // ← moved up: AI summary needs the time series
+
+        const executiveSummary = await generateExecutiveSummary(profile, businessKPIs, insights, trendSeries); // ← now async (Bedrock call) with trendSeries for mid-period pattern detection
 
         const analysisId = randomUUID();
         const createdAt = new Date().toISOString();
@@ -99,13 +100,13 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         };
 
         const resultBucket = process.env.RESULT_BUCKET || '';
-        const resultKey = `analysis-results/${userId}/${analysisId}.json`; // ← result path scoped per user
+        const resultKey = `analysis-results/${userId}/${analysisId}.json`;
 
         await writeJsonToS3(resultBucket, resultKey, result);
 
         await saveAnalysisMetadata({
             analysisId,
-            userId, // ← scope completed analysis to user
+            userId,
             datasetKey: body.key,
             bucket: body.bucket,
             status: 'COMPLETED',
