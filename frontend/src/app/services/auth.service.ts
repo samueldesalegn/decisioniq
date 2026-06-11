@@ -89,7 +89,8 @@ export class AuthService {
     const url =
       `${cognitoDomain}/logout?` +
       `client_id=${clientId}` +
-      `&redirect_uri=${encodeURIComponent(this.redirectUri)}`;
+      `&redirect_uri=${encodeURIComponent(this.redirectUri)}` +
+      `&response_type=code`; // ← add this
 
     window.location.href = url;
   }
