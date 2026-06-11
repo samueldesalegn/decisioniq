@@ -2,60 +2,81 @@
   <div class="dashboard-hero">
     <p class="eyebrow">DecisionIQ Dashboard</p>
     <h1>Your analytics command center.</h1>
-    <p>
-      Track uploaded datasets, decision scores, analysis quality, and recent business insights.
-    </p>
+    <p>Track uploaded datasets, decision scores, analysis quality, and recent business insights.</p>
   </div>
 
-  <section class="stats-grid">
-    <article class="stat-card">
-      <span>Total Analyses</span>
-      <strong>1</strong>
-      <p>Completed dataset reviews</p>
-    </article>
+  @if (isLoading()) {
+    <p class="loading">Loading dashboard...</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else {
 
-    <article class="stat-card">
-      <span>Average Score</span>
-      <strong>80</strong>
-      <p>Overall decision strength</p>
-    </article>
+    <section class="stats-grid">
+      <article class="stat-card">
+        <span>Total Analyses</span>
+        <strong>{{ totalAnalyses() }}</strong>
+        <p>Completed dataset reviews</p>
+      </article>
 
-    <article class="stat-card">
-      <span>Strong Results</span>
-      <strong>1</strong>
-      <p>High-confidence analyses</p>
-    </article>
+      <article class="stat-card">
+        <span>Average Score</span>
+        <strong>{{ averageScore() ?? '—' }}</strong>
+        <p>Overall decision strength</p>
+      </article>
 
-    <article class="stat-card">
-      <span>Latest Status</span>
-      <strong>Ready</strong>
-      <p>System available</p>
-    </article>
-  </section>
+      <article class="stat-card">
+        <span>Strong Results</span>
+        <strong>{{ strongCount() }}</strong>
+        <p>High-confidence analyses</p>
+      </article>
 
-  <section class="dashboard-panels">
-    <article class="panel">
-      <p class="eyebrow">Recent Analysis</p>
-      <h2>Business Performance</h2>
-      <p>
-        Latest dataset analysis returned a strong score with healthy margin and full data quality.
-      </p>
+      <article class="stat-card">
+        <span>Moderate</span>
+        <strong>{{ moderateCount() }}</strong>
+        <p>Analyses needing review</p>
+      </article>
 
-      <a routerLink="/analyses" class="panel-link">
-        View history →
-      </a>
-    </article>
+      <article class="stat-card">
+        <span>High Risk</span>
+        <strong>{{ highRiskCount() }}</strong>
+        <p>Flagged for attention</p>
+      </article>
 
-    <article class="panel">
-      <p class="eyebrow">Next Step</p>
-      <h2>Upload a new dataset</h2>
-      <p>
-        Analyze another CSV file to generate KPIs, risks, recommendations, and executive summaries.
-      </p>
+      @if (topDatasetType()) {
+        <article class="stat-card">
+          <span>Top Dataset Type</span>
+          <strong>{{ topDatasetType() }}</strong>
+          <p>Most analyzed category</p>
+        </article>
+      }
+    </section>
 
-      <a routerLink="/upload" class="primary-link">
-        Upload dataset →
-      </a>
-    </article>
-  </section>
+    <section class="dashboard-panels">
+      <article class="panel">
+        <p class="eyebrow">Latest Analysis</p>
+        @if (latestAnalysis()) {
+          <h2>{{ latestAnalysis()!.datasetType ?? 'Dataset' }}</h2>
+          <p>
+            Score: <strong>{{ latestAnalysis()!.decisionScore ?? '—' }}</strong>
+            &nbsp;·&nbsp;
+            Rating: <strong>{{ latestAnalysis()!.rating ?? '—' }}</strong>
+          </p>
+          <a [routerLink]="['/analysis', latestAnalysis()!.analysisId]" class="panel-link">
+            View latest →
+          </a>
+        } @else {
+          <h2>No analyses yet</h2>
+          <p>Upload a dataset to see results here.</p>
+        }
+      </article>
+
+      <article class="panel">
+        <p class="eyebrow">Next Step</p>
+        <h2>Upload a new dataset</h2>
+        <p>Analyze another CSV file to generate KPIs, risks, recommendations, and executive summaries.</p>
+        <a routerLink="/upload" class="primary-link">Upload dataset →</a>
+      </article>
+    </section>
+
+  }
 </section>
