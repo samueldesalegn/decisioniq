@@ -5,44 +5,74 @@
       <h1>Analysis History</h1>
       <p>Review previous dataset analyses, decision scores, and processing status.</p>
     </div>
+    <a routerLink="/upload" class="primary-action">+ Upload dataset</a>
   </header>
 
+  <!-- Search -->
+  <div class="search-bar">
+    <input
+      type="text"
+      placeholder="Search by dataset type, rating, or status..."
+      [value]="searchQuery()"
+      (input)="searchQuery.set($any($event.target).value)"
+    />
+  </div>
+
   @if (isLoading()) {
-    <p class="loading">Loading analyses...</p>
+    <div class="loading-state">
+      <p>Loading analyses...</p>
+    </div>
+  } @else if (error()) {
+    <div class="error-state">{{ error() }}</div>
+  } @else if (filtered().length === 0) {
+    <div class="empty-state">
+      @if (searchQuery()) {
+        <p>No analyses match "<strong>{{ searchQuery() }}</strong>"</p>
+      } @else {
+        <p>No analyses yet. <a routerLink="/upload">Upload your first dataset →</a></p>
+      }
+    </div>
   } @else {
     <section class="history-grid">
-      @for (item of analyses(); track item.analysisId) {
+      @for (item of filtered(); track item.analysisId) {
         <a class="analysis-card" [routerLink]="['/analysis', item.analysisId]">
+
           <div class="card-top">
             <div>
-              <p class="card-label">{{ item.processingMode }}</p>
+              <p class="card-label">{{ item.processingMode ?? 'LAMBDA' }}</p>
               <h2>{{ item.datasetType || 'Unknown Dataset' }}</h2>
+              <p class="dataset-name">{{ getDatasetName(item) }}</p>
             </div>
-
-            <span class="rating">{{ item.rating || 'Pending' }}</span>
+            <span [class]="ratingClass(item.rating)">
+              {{ item.rating || 'Pending' }}
+            </span>
           </div>
 
           <div class="score-row">
             <div>
               <span>Decision Score</span>
-              <strong>{{ item.decisionScore ?? '-' }}</strong>
+              <strong [style.color]="scoreColor(item.decisionScore)">
+                {{ item.decisionScore ?? '—' }}
+              </strong>
             </div>
-
             <div>
               <span>Quality</span>
-              <strong>{{ item.qualityScore ?? '-' }}</strong>
+              <strong>{{ item.qualityScore ?? '—' }}</strong>
             </div>
-
             <div>
               <span>Margin</span>
-              <strong>{{ item.profitMargin ?? '-' }}%</strong>
+              <strong>{{ item.profitMargin != null ? item.profitMargin + '%' : '—' }}</strong>
             </div>
           </div>
 
           <div class="meta-row">
-            <span>{{ item.status }}</span>
-            <span>{{ item.createdAt }}</span>
+            <span class="status-badge status-{{ item.status?.toLowerCase() }}">
+              {{ item.status }}
+            </span>
+            <span>{{ formatDate(item.createdAt) }}</span>
+            <span>{{ formatBytes(item.fileSizeBytes) }}</span>
           </div>
+
         </a>
       }
     </section>
