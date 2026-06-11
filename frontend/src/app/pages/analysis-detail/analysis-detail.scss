@@ -97,6 +97,7 @@ h1 {
   color: #cbd5e1;
   line-height: 1.85;
   font-size: 1.05rem;
+  white-space: pre-line;  // ← preserves the AI's paragraph breaks
 }
 
 .profile-chips {
