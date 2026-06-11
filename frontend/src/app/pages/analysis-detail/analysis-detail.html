@@ -1,90 +1,115 @@
 <section class="analysis-page">
+
   <header class="topbar">
     <div>
       <p class="eyebrow">DecisionIQ Analysis</p>
-      <h1>{{ analysis()?.result?.profile?.datasetType || 'Dataset Analysis' }}</h1>
+      <h1>{{ datasetType() }}</h1>
     </div>
-
-    <a routerLink="/analyses">View history</a>
+    <a routerLink="/analyses" class="back-link">← View history</a>
   </header>
 
   @if (isLoading()) {
-    <p class="loading">Loading analysis...</p>
+    <div class="loading-state">
+      <p>Loading analysis...</p>
+    </div>
+  } @else if (error()) {
+    <div class="error-state">
+      <p>{{ error() }}</p>
+    </div>
   } @else if (analysis()) {
+
+    <!-- Score Hero -->
     <section class="score-hero">
-      <div>
-        <span>Decision Score</span>
-        <strong>{{ analysis()?.result?.decisionScore?.score }}</strong>
-        <p>{{ analysis()?.result?.decisionScore?.rating }}</p>
+      <div class="score-left">
+        <span class="score-label">Decision Score</span>
+        <strong class="score-value" [style.color]="scoreColor()">
+          {{ decisionScore() ?? '—' }}
+        </strong>
+        <div class="score-bar-track">
+          <div class="score-bar-fill"
+               [style.width]="scoreWidth()"
+               [style.background]="scoreColor()">
+          </div>
+        </div>
+        <span class="score-rating" [style.color]="scoreColor()">
+          {{ rating() ?? '—' }}
+        </span>
       </div>
 
-      <p>
-        {{ analysis()?.result?.executiveSummary }}
-      </p>
-    </section>
+      <div class="score-right">
+        <p class="eyebrow">Executive Summary</p>
+        <p class="summary-text">{{ executiveSummary() }}</p>
 
-    <section class="kpi-grid">
-      <article>
-        <span>Total Revenue</span>
-        <strong>${{ analysis()?.result?.businessKPIs?.totalRevenue?.toLocaleString() }}</strong>
-      </article>
-
-      <article>
-        <span>Total Cost</span>
-        <strong>${{ analysis()?.result?.businessKPIs?.totalCost?.toLocaleString() }}</strong>
-      </article>
-
-      <article>
-        <span>Total Profit</span>
-        <strong>${{ analysis()?.result?.businessKPIs?.totalProfit?.toLocaleString() }}</strong>
-      </article>
-
-      <article>
-        <span>Profit Margin</span>
-        <strong>{{ analysis()?.result?.businessKPIs?.profitMargin }}%</strong>
-      </article>
-    </section>
-
-    <section class="panel chart-panel">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Trend Analysis</p>
-          <h2>Revenue, Cost, and Profit</h2>
-        </div>
-      </div>
-
-      <canvas #trendChart></canvas>
-    </section>
-
-    <section class="panel">
-      <h2>Trend Summary</h2>
-
-      <div class="trend-grid">
-        <div>
-          <span>Revenue</span>
-          <strong>{{ analysis()?.result?.trends?.revenue?.direction }}</strong>
-          <p>
-            {{ analysis()?.result?.trends?.revenue?.changePercent }}%
-            change from first to last period.
-          </p>
-        </div>
-
-        <div>
-          <span>Cost</span>
-          <strong>{{ analysis()?.result?.trends?.cost?.direction }}</strong>
-          <p>
-            {{ analysis()?.result?.trends?.cost?.changePercent }}%
-            change from first to last period.
-          </p>
-        </div>
+        @if (profile()) {
+          <div class="profile-chips">
+            <span class="chip">{{ profile().rowCount }} rows</span>
+            <span class="chip">{{ profile().columnCount }} columns</span>
+            <span class="chip">Quality: {{ profile().qualityScore }}/100</span>
+          </div>
+        }
       </div>
     </section>
 
+    <!-- KPIs -->
+    @if (kpis()) {
+      <section class="kpi-grid">
+        <article class="kpi-card">
+          <span>Total Revenue</span>
+          <strong>${{ kpis().totalRevenue?.toLocaleString() }}</strong>
+        </article>
+        <article class="kpi-card">
+          <span>Total Cost</span>
+          <strong>${{ kpis().totalCost?.toLocaleString() }}</strong>
+        </article>
+        <article class="kpi-card">
+          <span>Total Profit</span>
+          <strong>${{ kpis().totalProfit?.toLocaleString() }}</strong>
+        </article>
+        <article class="kpi-card">
+          <span>Profit Margin</span>
+          <strong>{{ kpis().profitMargin }}%</strong>
+        </article>
+      </section>
+    }
+
+    <!-- Trend Chart -->
+    @if (trendSeries().length > 0) {
+      <section class="panel chart-panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Trend Analysis</p>
+            <h2>Revenue, Cost, and Profit</h2>
+          </div>
+        </div>
+        <canvas #trendChart></canvas>
+      </section>
+    }
+
+    <!-- Trend Summary -->
+    @if (trends()) {
+      <section class="panel">
+        <h2>Trend Summary</h2>
+        <div class="trend-grid">
+          <div class="trend-card">
+            <span>Revenue</span>
+            <strong>{{ trends().revenue?.direction }}</strong>
+            <p>{{ trends().revenue?.changePercent }}% change from first to last period</p>
+          </div>
+          <div class="trend-card">
+            <span>Cost</span>
+            <strong>{{ trends().cost?.direction }}</strong>
+            <p>{{ trends().cost?.changePercent }}% change from first to last period</p>
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- Insights & Recommendations -->
     <section class="two-column">
       <article class="panel">
         <h2>Insights</h2>
-        <ul>
-          @for (item of analysis()?.result?.insights; track item) {
+        <ul class="item-list">
+          @for (item of insights(); track item) {
             <li>{{ item }}</li>
           }
         </ul>
@@ -92,21 +117,25 @@
 
       <article class="panel">
         <h2>Recommendations</h2>
-        <ul>
-          @for (item of analysis()?.result?.recommendations; track item) {
+        <ul class="item-list">
+          @for (item of recommendations(); track item) {
             <li>{{ item }}</li>
           }
         </ul>
       </article>
     </section>
 
-    <section class="panel risk">
-      <h2>Risks</h2>
-      <ul>
-        @for (item of analysis()?.result?.risks; track item) {
-          <li>{{ item }}</li>
-        }
-      </ul>
-    </section>
+    <!-- Risks -->
+    @if (risks().length > 0) {
+      <section class="panel risk">
+        <h2>⚠ Risks</h2>
+        <ul class="item-list">
+          @for (item of risks(); track item) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+      </section>
+    }
+
   }
 </section>
