@@ -14,6 +14,8 @@ export class App {
   private readonly auth = inject(AuthService);
 
   constructor() {
-    this.auth.handleAuthCallback();
+    if (window.location.search.includes('code=')) {
+      this.auth.handleAuthCallback();
+    }
   }
 }
