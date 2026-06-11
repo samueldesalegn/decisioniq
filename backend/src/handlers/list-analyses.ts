@@ -19,6 +19,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
                 status: item.status,
                 processingMode: item.processingMode,
                 datasetType: item.datasetType,
+                datasetKey: item.datasetKey,
                 decisionScore: item.decisionScore,
                 rating: item.rating,
                 profitMargin: item.profitMargin,

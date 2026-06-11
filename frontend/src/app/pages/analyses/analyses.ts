@@ -77,9 +77,9 @@ export class Analyses {
   }
 
   ratingClass(rating?: string): string {
-    if (rating === 'Strong') return 'rating-strong';
+    if (rating === 'Excellent' || rating === 'Strong') return 'rating-strong';
     if (rating === 'Moderate') return 'rating-moderate';
-    if (rating === 'Weak') return 'rating-weak';
+    if (rating === 'Weak' || rating === 'Critical') return 'rating-weak';
     return 'rating-pending';
   }
 

@@ -37,23 +37,22 @@ export class Dashboard implements OnInit {
     return Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length);
   });
 
+  // Excellent + Strong = high-confidence results
   readonly strongCount = computed(
-    () => this.analyses().filter((a) => a.rating === 'Strong').length,
+    () => this.analyses().filter((a) => a.rating === 'Excellent' || a.rating === 'Strong').length,
   );
 
   readonly moderateCount = computed(
     () => this.analyses().filter((a) => a.rating === 'Moderate').length,
   );
 
+  // Weak + Critical = analyses requiring attention
   readonly weakCount = computed(
-    () =>
-      // ← was highRiskCount
-      this.analyses().filter((a) => a.rating === 'Weak').length,
+    () => this.analyses().filter((a) => a.rating === 'Weak' || a.rating === 'Critical').length,
   );
 
   readonly latestAnalysis = computed(
     () =>
-      // ← proper sort
       [...this.analyses()].sort(
         (a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime(),
       )[0] ?? null,
