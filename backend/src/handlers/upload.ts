@@ -2,7 +2,8 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { randomUUID } from 'crypto';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { findAnalysisByFileHash } from '../repositories/analysis.repository';
+import { findAnalysisByFileHashAndUser } from '../repositories/analysis.repository';
+import { getUserIdFromEvent } from '../utils/auth.util';
 import { failure, success } from '../utils/http-response.util';
 
 const s3 = new S3Client({});
@@ -19,8 +20,14 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             return failure('fileName is required', 400);
         }
 
+        const userId = getUserIdFromEvent(event);
+
+        if (!userId) {
+            return failure('Unauthorized', 401);
+        }
+
         if (fileHash) {
-            const existingAnalysis = await findAnalysisByFileHash(fileHash);
+            const existingAnalysis = await findAnalysisByFileHashAndUser(fileHash, userId);
 
             if (existingAnalysis) {
                 return success({
@@ -36,7 +43,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         }
 
         const datasetId = randomUUID();
-        const key = `raw/${datasetId}/${fileName}`;
+        const key = `raw/${userId}/${datasetId}/${fileName}`;
 
         const command = new PutObjectCommand({
             Bucket: process.env.UPLOAD_BUCKET,
@@ -44,6 +51,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             ContentType: contentType,
             Metadata: {
                 ...(fileHash ? { fileHash } : {}),
+                userId,
             },
         });
 
