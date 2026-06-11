@@ -52,6 +52,7 @@ Resources:
         CorsRules:
           - AllowedOrigins:
               - https://decisioniq.sdcloudhub.com
+              - http://localhost:4200           # ← add for local dev
             AllowedMethods:
               - GET
               - PUT
@@ -74,7 +75,7 @@ Resources:
       AttributeDefinitions:
         - AttributeName: analysisId
           AttributeType: S
-        - AttributeName: fileHash
+        - AttributeName: fileHash        # ← required for GSI
           AttributeType: S
       KeySchema:
         - AttributeName: analysisId
@@ -121,7 +122,7 @@ Resources:
       Policies:
         - S3WritePolicy:
             BucketName: !Ref UploadBucket
-        - DynamoDBReadPolicy:
+        - DynamoDBReadPolicy:             # ← needs read to query FileHashIndex
             TableName: !Ref AnalysisTable
       Events:
         UploadApi:

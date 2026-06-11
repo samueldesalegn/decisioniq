@@ -25,19 +25,14 @@ export class ApiService {
     };
   }
 
-  getUploadUrl(fileName: string, contentType: string) {
+  getUploadUrl(fileName: string, contentType: string, fileHash: string) {
     return this.http.post<{
-      datasetId: string;
-      uploadUrl: string;
-      key: string;
-    }>(
-      `${this.apiUrl}/upload-url`,
-      {
-        fileName,
-        contentType,
-      },
-      this.getAuthHeaders(),
-    );
+      duplicate: boolean;
+      analysisId?: string;
+      uploadUrl?: string;
+      key?: string;
+      fileHash?: string;
+    }>(`${this.apiUrl}/upload-url`, { fileName, contentType, fileHash }, this.getAuthHeaders());
   }
 
   uploadFile(uploadUrl: string, file: File) {
@@ -49,21 +44,14 @@ export class ApiService {
     });
   }
 
-  analyze(bucket: string, key: string) {
+  analyze(bucket: string, key: string, fileHash: string) {
     return this.http.post<{
       analysisId: string;
       status: string;
       processingMode: string;
       resultLocation: unknown;
       summary: unknown;
-    }>(
-      `${this.apiUrl}/analyze`,
-      {
-        bucket,
-        key,
-      },
-      this.getAuthHeaders(),
-    );
+    }>(`${this.apiUrl}/analyze`, { bucket, key, fileHash }, this.getAuthHeaders());
   }
 
   getAnalysis(analysisId: string) {

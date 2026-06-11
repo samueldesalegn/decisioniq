@@ -15,7 +15,7 @@ import { calculateTrends } from '../services/trend.service';
 import { failure, success } from '../utils/http-response.util';
 import { buildTrendSeries } from '../services/trend-series.service';
 
-const LARGE_FILE_THRESHOLD_BYTES = 50 * 1024 * 1024; // 50 MB
+const LARGE_FILE_THRESHOLD_BYTES = 50 * 1024 * 1024;
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
@@ -24,6 +24,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         if (!body.bucket || !body.key) {
             return failure('bucket and key are required', 400);
         }
+
+        const fileHash: string | undefined = body.fileHash; // ← read fileHash from request
 
         const fileSizeBytes = await getS3ObjectSize(body.bucket, body.key);
 
@@ -39,6 +41,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
                 processingMode: 'BIG_DATA',
                 fileSizeBytes,
                 createdAt,
+                ...(fileHash ? { fileHash } : {}), // ← persist hash so dedup works even for queued jobs
             });
 
             return success(
@@ -100,6 +103,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             processingMode: 'LAMBDA',
             fileSizeBytes,
             createdAt,
+
+            ...(fileHash ? { fileHash } : {}), // ← persist hash for future dedup lookups
 
             datasetType: profile.datasetType,
             decisionScore: decisionScore.score,
