@@ -134,6 +134,44 @@
             <li>{{ item }}</li>
           }
         </ul>
+        <!-- AI Chat -->
+    <section class="panel chat-panel">
+      <p class="eyebrow">Ask DecisionIQ</p>
+      <h2>Chat about this dataset</h2>
+
+      @if (chatMessages().length === 0) {
+        <div class="chat-suggestions">
+          @for (q of suggestedQuestions; track q) {
+            <button class="suggestion-chip" (click)="sendChat(q)">{{ q }}</button>
+          }
+        </div>
+      }
+
+      <div class="chat-messages">
+        @for (msg of chatMessages(); track $index) {
+          <div class="chat-bubble" [class.user]="msg.role === 'user'" [class.assistant]="msg.role === 'assistant'">
+            {{ msg.content }}
+          </div>
+        }
+        @if (isChatLoading()) {
+          <div class="chat-bubble assistant typing">Analyzing...</div>
+        }
+      </div>
+
+      <div class="chat-input-row">
+        <input
+          type="text"
+          placeholder="Ask about this dataset..."
+          [value]="chatInput()"
+          (input)="chatInput.set($any($event.target).value)"
+          (keydown.enter)="sendChat()"
+          [disabled]="isChatLoading()"
+        />
+        <button (click)="sendChat()" [disabled]="isChatLoading() || !chatInput().trim()">
+          Send
+        </button>
+      </div>
+    </section>
       </section>
     }
 

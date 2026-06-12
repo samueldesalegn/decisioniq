@@ -61,4 +61,12 @@ export class ApiService {
   listAnalyses() {
     return this.http.get(`${this.apiUrl}/analyses`, this.getAuthHeaders());
   }
+
+  chat(analysisId: string, messages: { role: 'user' | 'assistant'; content: string }[]) {
+    return this.http.post<{ reply: string }>(
+      `${this.apiUrl}/chat`,
+      { analysisId, messages },
+      this.getAuthHeaders(),
+    );
+  }
 }

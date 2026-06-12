@@ -255,3 +255,97 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
+
+// ── AI Chat ──────────────────────────────────────────
+.chat-panel {
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.chat-suggestions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.suggestion-chip {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 99px;
+  color: #cbd5e1;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+
+  &:hover { border-color: #38bdf8; }
+}
+
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.chat-bubble {
+  max-width: 80%;
+  padding: 0.85rem 1.1rem;
+  border-radius: 16px;
+  line-height: 1.65;
+  font-size: 0.95rem;
+  white-space: pre-line;
+
+  &.user {
+    align-self: flex-end;
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #e0f2fe;
+  }
+
+  &.assistant {
+    align-self: flex-start;
+    background: #0f172a;
+    border: 1px solid #243044;
+    color: #cbd5e1;
+  }
+
+  &.typing {
+    color: #64748b;
+    font-style: italic;
+  }
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 0.75rem;
+
+  input {
+    flex: 1;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 0.85rem 1.1rem;
+    color: #f8fafc;
+    font-size: 0.95rem;
+    outline: none;
+
+    &::placeholder { color: #475569; }
+    &:focus { border-color: #38bdf8; }
+    &:disabled { opacity: 0.5; }
+  }
+
+  button {
+    background: #38bdf8;
+    color: #082f49;
+    border: none;
+    border-radius: 12px;
+    padding: 0.85rem 1.6rem;
+    font-weight: 800;
+    cursor: pointer;
+
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+}

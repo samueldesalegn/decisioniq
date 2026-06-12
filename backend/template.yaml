@@ -186,6 +186,42 @@ Resources:
         EntryPoints:
           - handlers/analyze.ts
 
+  ChatFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers/chat.handler
+      Timeout: 60
+      Environment:
+        Variables:
+          ANALYSIS_TABLE: !Ref AnalysisTable
+          BEDROCK_REGION: us-east-1
+          BEDROCK_MODEL_ID: us.anthropic.claude-sonnet-4-6
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref AnalysisTable
+        - S3ReadPolicy:
+            BucketName: !Ref ResultBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: '*'
+      Events:
+        ChatApi:
+          Type: Api
+          Properties:
+            Path: /chat
+            Method: post
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - handlers/chat.ts
+
   GetAnalysisFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -258,6 +294,10 @@ Outputs:
     Description: DecisionIQ Analyze endpoint
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/analyze"
 
+  ChatEndpoint:
+    Description: DecisionIQ AI Chat endpoint
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/chat"
+
   GetAnalysisEndpoint:
     Description: DecisionIQ Get Analysis endpoint
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/analysis/{analysisId}"
@@ -301,6 +341,10 @@ Outputs:
   AnalyzeFunction:
     Description: DecisionIQ Analyze Lambda ARN
     Value: !GetAtt AnalyzeFunction.Arn
+
+  ChatFunction:
+    Description: DecisionIQ Chat Lambda ARN
+    Value: !GetAtt ChatFunction.Arn
 
   GetAnalysisFunction:
     Description: DecisionIQ Get Analysis Lambda ARN

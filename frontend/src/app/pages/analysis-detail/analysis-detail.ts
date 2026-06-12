@@ -47,6 +47,17 @@ export class AnalysisDetail {
     return score !== null ? `${score}%` : '0%';
   });
 
+  // ── AI Chat ──────────────────────────────────────────
+  chatMessages = signal<{ role: 'user' | 'assistant'; content: string }[]>([]);
+  chatInput = signal('');
+  isChatLoading = signal(false);
+
+  readonly suggestedQuestions = [
+    'What is the biggest risk in this data?',
+    'Why did profit change over time?',
+    'Summarize this for my CEO in two sentences.',
+  ];
+
   private chart: Chart | null = null;
 
   constructor() {
@@ -137,6 +148,36 @@ export class AnalysisDetail {
           },
         },
       });
+    });
+  }
+
+  sendChat(question?: string): void {
+    const text = (question ?? this.chatInput()).trim();
+    if (!text || this.isChatLoading()) return;
+
+    const analysisId = this.route.snapshot.paramMap.get('id');
+    if (!analysisId) return;
+
+    const updated = [...this.chatMessages(), { role: 'user' as const, content: text }];
+    this.chatMessages.set(updated);
+    this.chatInput.set('');
+    this.isChatLoading.set(true);
+
+    this.api.chat(analysisId, updated).subscribe({
+      next: (res) => {
+        this.chatMessages.set([...updated, { role: 'assistant' as const, content: res.reply }]);
+        this.isChatLoading.set(false);
+      },
+      error: () => {
+        this.chatMessages.set([
+          ...updated,
+          {
+            role: 'assistant' as const,
+            content: 'Sorry — I could not process that. Please try again.',
+          },
+        ]);
+        this.isChatLoading.set(false);
+      },
     });
   }
 }
