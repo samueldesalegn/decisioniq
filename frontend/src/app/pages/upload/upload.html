@@ -22,6 +22,16 @@
       <p class="error">{{ error() }}</p>
     }
 
+    @if (showUpgrade()) {
+      <div class="upgrade-box">
+        <h3>Upgrade to DecisionIQ Pro</h3>
+        <p>Unlimited analyses, AI executive summaries, chat, and PDF reports — $19/month.</p>
+        <button class="upgrade-btn" (click)="upgrade()" [disabled]="isRedirecting()">
+          {{ isRedirecting() ? 'Redirecting to checkout...' : 'Upgrade to Pro →' }}
+        </button>
+      </div>
+    }
+
     <button (click)="analyze()" [disabled]="isUploading()">
       @if (isUploading()) {
         Analyzing...

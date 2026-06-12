@@ -17,12 +17,15 @@ export class Upload {
   selectedFile = signal<File | null>(null);
   isUploading = signal(false);
   error = signal<string | null>(null);
+  showUpgrade = signal(false);
+  isRedirecting = signal(false);
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
     this.selectedFile.set(file);
     this.error.set(null);
+    this.showUpgrade.set(false);
   }
 
   private async hashFile(file: File): Promise<string> {
@@ -43,6 +46,7 @@ export class Upload {
 
     this.isUploading.set(true);
     this.error.set(null);
+    this.showUpgrade.set(false);
 
     this.hashFile(file).then((fileHash) => {
       this.api.getUploadUrl(file.name, file.type || 'text/csv', fileHash).subscribe({
@@ -60,9 +64,16 @@ export class Upload {
                   this.isUploading.set(false);
                   this.router.navigate(['/analysis', analysisResponse.analysisId]);
                 },
-                error: () => {
+                error: (err) => {
                   this.isUploading.set(false);
-                  this.error.set('Failed to analyze uploaded file.');
+
+                  if (err.status === 402) {
+                    // Free plan limit reached
+                    this.error.set('You have used all 3 free analyses for this month.');
+                    this.showUpgrade.set(true);
+                  } else {
+                    this.error.set('Failed to analyze uploaded file.');
+                  }
                 },
               });
             },
@@ -77,6 +88,25 @@ export class Upload {
           this.error.set('Failed to generate upload URL.');
         },
       });
+    });
+  }
+
+  upgrade(): void {
+    this.isRedirecting.set(true);
+
+    this.api.createCheckoutSession().subscribe({
+      next: (res) => {
+        if (res.url) {
+          window.location.href = res.url; // off to Stripe Checkout
+        } else {
+          this.isRedirecting.set(false);
+          this.error.set('Could not start checkout. Please try again.');
+        }
+      },
+      error: () => {
+        this.isRedirecting.set(false);
+        this.error.set('Could not start checkout. Please try again.');
+      },
     });
   }
 }

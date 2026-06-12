@@ -63,3 +63,36 @@ button {
 .error {
   color: #f87171;
 }
+
+.upgrade-box {
+  margin-top: 1.5rem;
+  background: linear-gradient(135deg, #111827, #1e293b);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 18px;
+  padding: 1.75rem;
+
+  h3 {
+    margin: 0 0 0.5rem;
+    color: #38bdf8;
+  }
+
+  p {
+    color: #cbd5e1;
+    margin: 0 0 1.25rem;
+    font-size: 0.95rem;
+  }
+}
+
+.upgrade-btn {
+  background: #38bdf8;
+  color: #082f49;
+  border: none;
+  border-radius: 12px;
+  padding: 0.85rem 1.6rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+
+  &:hover { opacity: 0.85; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}

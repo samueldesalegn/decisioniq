@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { randomUUID } from 'crypto';
-import { saveAnalysisMetadata } from '../repositories/analysis.repository';
+import { saveAnalysisMetadata, countAnalysesThisMonth } from '../repositories/analysis.repository';
+import { getUserBilling } from '../repositories/user.repository';
 import { getS3ObjectSize, readS3ObjectAsText, writeJsonToS3 } from '../services/s3.service';
 import { parseCsv } from '../services/parser.service';
 import { analyzeRows } from '../services/analysis.service';
@@ -17,6 +18,7 @@ import { buildTrendSeries } from '../services/trend-series.service';
 import { getUserIdFromEvent } from '../utils/auth.util';
 
 const LARGE_FILE_THRESHOLD_BYTES = 50 * 1024 * 1024;
+const FREE_TIER_LIMIT = 3;
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
@@ -31,6 +33,21 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         if (!userId) {
             return failure('Unauthorized', 401);
         }
+
+        // ── Billing enforcement ──────────────────────────
+        const billing = await getUserBilling(userId);
+
+        if (billing.plan !== 'PRO') {
+            const used = await countAnalysesThisMonth(userId);
+
+            if (used >= FREE_TIER_LIMIT) {
+                return failure(
+                    `Free plan limit reached (${FREE_TIER_LIMIT} analyses/month). Upgrade to Pro for unlimited analyses.`,
+                    402,
+                );
+            }
+        }
+        // ─────────────────────────────────────────────────
 
         const fileHash: string | undefined = body.fileHash;
 
@@ -75,9 +92,9 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         const decisionScore = calculateDecisionScore(profile, businessKPIs);
         const trends = calculateTrends(rows, profile.numericColumns);
         const insights = generateInsights(businessKPIs, trends);
-        const trendSeries = buildTrendSeries(rows); // ← moved up: AI summary needs the time series
+        const trendSeries = buildTrendSeries(rows);
 
-        const executiveSummary = await generateExecutiveSummary(profile, businessKPIs, insights, trendSeries); // ← now async (Bedrock call) with trendSeries for mid-period pattern detection
+        const executiveSummary = await generateExecutiveSummary(profile, businessKPIs, insights, trendSeries);
 
         const analysisId = randomUUID();
         const createdAt = new Date().toISOString();

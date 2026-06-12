@@ -69,4 +69,19 @@ export class ApiService {
       this.getAuthHeaders(),
     );
   }
+  getBillingStatus() {
+    return this.http.get<{
+      plan: 'FREE' | 'PRO';
+      usage: { used: number; limit: number | null };
+    }>(`${this.apiUrl}/billing/status`, this.getAuthHeaders());
+  }
+  
+  createCheckoutSession() {
+    return this.http.post<{ url: string }>(`${this.apiUrl}/billing/checkout`, {}, this.getAuthHeaders());
+  }
+  
+  createPortalSession() {
+    return this.http.post<{ url: string }>(`${this.apiUrl}/billing/portal`, {}, this.getAuthHeaders());
+  }
 }
+

@@ -2,6 +2,20 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: DecisionIQ backend API
 
+Parameters:
+  StripeSecretKey:
+    Type: String
+    NoEcho: true
+    Description: Stripe secret key (sk_test_... or sk_live_...)
+  StripeWebhookSecret:
+    Type: String
+    NoEcho: true
+    Default: 'pending'
+    Description: Stripe webhook signing secret (whsec_...)
+  StripePriceId:
+    Type: String
+    Description: Stripe price ID for the Pro plan (price_...)
+
 Globals:
   Function:
     Timeout: 10
@@ -96,6 +110,27 @@ Resources:
           Projection:
             ProjectionType: ALL
 
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: DecisionIQUsers
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: stripeCustomerId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: StripeCustomerIndex
+          KeySchema:
+            - AttributeName: stripeCustomerId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
   HealthFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -157,6 +192,7 @@ Resources:
         Variables:
           ANALYSIS_TABLE: !Ref AnalysisTable
           RESULT_BUCKET: !Ref ResultBucket
+          USERS_TABLE: !Ref UsersTable
           BEDROCK_REGION: us-east-1
           BEDROCK_MODEL_ID: us.anthropic.claude-sonnet-4-6
       Policies:
@@ -166,6 +202,8 @@ Resources:
             BucketName: !Ref ResultBucket
         - DynamoDBCrudPolicy:
             TableName: !Ref AnalysisTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
         - Statement:
             - Effect: Allow
               Action:
@@ -276,6 +314,125 @@ Resources:
         EntryPoints:
           - handlers/list-analyses.ts
 
+  BillingCheckoutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers/billing-checkout.handler
+      Timeout: 30
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
+          STRIPE_SECRET_KEY: !Ref StripeSecretKey
+          STRIPE_PRICE_ID: !Ref StripePriceId
+          APP_URL: https://decisioniq.sdcloudhub.com
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        CheckoutApi:
+          Type: Api
+          Properties:
+            Path: /billing/checkout
+            Method: post
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - handlers/billing-checkout.ts
+
+  BillingPortalFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers/billing-portal.handler
+      Timeout: 30
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
+          STRIPE_SECRET_KEY: !Ref StripeSecretKey
+          APP_URL: https://decisioniq.sdcloudhub.com
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        PortalApi:
+          Type: Api
+          Properties:
+            Path: /billing/portal
+            Method: post
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - handlers/billing-portal.ts
+
+  BillingStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers/billing-status.handler
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
+          ANALYSIS_TABLE: !Ref AnalysisTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref AnalysisTable
+      Events:
+        StatusApi:
+          Type: Api
+          Properties:
+            Path: /billing/status
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - handlers/billing-status.ts
+
+  StripeWebhookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers/stripe-webhook.handler
+      Timeout: 30
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
+          STRIPE_SECRET_KEY: !Ref StripeSecretKey
+          STRIPE_WEBHOOK_SECRET: !Ref StripeWebhookSecret
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        WebhookApi:
+          Type: Api
+          Properties:
+            Path: /billing/webhook
+            Method: post
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - handlers/stripe-webhook.ts
+
 Outputs:
 
   ApiUrl:
@@ -298,6 +455,10 @@ Outputs:
     Description: DecisionIQ AI Chat endpoint
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/chat"
 
+  BillingWebhookEndpoint:
+    Description: DecisionIQ Stripe webhook endpoint (register this URL in Stripe)
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/billing/webhook"
+
   GetAnalysisEndpoint:
     Description: DecisionIQ Get Analysis endpoint
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/analysis/{analysisId}"
@@ -317,6 +478,10 @@ Outputs:
   AnalysisTableName:
     Description: DecisionIQ Analysis Table
     Value: !Ref AnalysisTable
+
+  UsersTableName:
+    Description: DecisionIQ Users Table
+    Value: !Ref UsersTable
 
   CognitoUserPoolId:
     Description: DecisionIQ Cognito User Pool ID

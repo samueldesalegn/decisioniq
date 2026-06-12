@@ -55,4 +55,8 @@ jobs:
             --region us-east-1 \
             --capabilities CAPABILITY_IAM \
             --no-confirm-changeset \
-            --no-fail-on-empty-changeset
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              StripeSecretKey=${{ secrets.STRIPE_SECRET_KEY }} \
+              StripeWebhookSecret=${{ secrets.STRIPE_WEBHOOK_SECRET }} \
+              StripePriceId=${{ secrets.STRIPE_PRICE_ID }}
