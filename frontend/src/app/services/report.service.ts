@@ -17,12 +17,18 @@ const COLORS = {
   line: '#e2e8f0',
 };
 
+type ChatMessage = { role: 'user' | 'assistant'; content: string };
+
 @Injectable({ providedIn: 'root' })
 export class ReportService {
   private doc!: jsPDF;
   private y = 0;
 
-  generateExecutiveReport(analysis: any, chartCanvas?: HTMLCanvasElement): void {
+  generateExecutiveReport(
+    analysis: any,
+    chartCanvas?: HTMLCanvasElement,
+    chatMessages: ChatMessage[] = [],
+  ): void {
     const result = analysis?.result ?? {};
     this.doc = new jsPDF({ unit: 'mm', format: 'a4' });
     this.y = 0;
@@ -34,6 +40,12 @@ export class ReportService {
     this.drawKpiTable(result.businessKPIs ?? {});
 
     if (chartCanvas) {
+      // Reserve space for heading + chart together so the heading
+      // is never orphaned at the bottom of a page
+      const ratio = chartCanvas.height / chartCanvas.width;
+      const chartHeight = CONTENT_WIDTH * ratio;
+      this.ensureSpace(16 + chartHeight + 8);
+
       this.drawSection('Revenue, Cost, and Profit Trend');
       this.drawChart(chartCanvas);
     }
@@ -41,6 +53,7 @@ export class ReportService {
     this.drawList('Insights', result.insights ?? []);
     this.drawList('Recommendations', result.recommendations ?? []);
     this.drawList('Risks', result.risks ?? [], COLORS.amber);
+    this.drawChatSection(chatMessages);
 
     this.drawFooters();
 
@@ -51,7 +64,6 @@ export class ReportService {
   // ── sections ─────────────────────────────────────────
 
   private drawCoverHeader(result: any): void {
-    // Navy banner
     this.doc.setFillColor(COLORS.navy);
     this.doc.rect(0, 0, PAGE_WIDTH, 34, 'F');
 
@@ -76,7 +88,6 @@ export class ReportService {
 
     this.y = 44;
 
-    // Dataset title
     this.doc.setTextColor(COLORS.text);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setFontSize(20);
@@ -116,7 +127,6 @@ export class ReportService {
     this.doc.setFontSize(11);
     this.doc.text(rating.toUpperCase(), MARGIN + 30, this.y + 19);
 
-    // score bar
     const barX = MARGIN + 70;
     const barW = CONTENT_WIDTH - 80;
     this.doc.setFillColor(COLORS.line);
@@ -162,7 +172,7 @@ export class ReportService {
         this.doc.text(line, MARGIN, this.y);
         this.y += 5;
       }
-      this.y += 3; // paragraph gap
+      this.y += 3;
     }
     this.y += 2;
   }
@@ -189,7 +199,7 @@ export class ReportService {
     rows.forEach(([label, value], i) => {
       const x = MARGIN + colW * i;
       this.doc.setDrawColor(COLORS.line);
-      this.doc.setFillColor('#f8fafc');
+      this.doc.setFillColor('#f8f8fc');
       this.doc.roundedRect(x + 1, this.y, colW - 2, 18, 2, 2, 'FD');
 
       this.doc.setTextColor(COLORS.muted);
@@ -214,7 +224,6 @@ export class ReportService {
 
     this.ensureSpace(imgH + 4);
 
-    // white backing so dark-themed chart text stays readable
     this.doc.setFillColor(COLORS.navy);
     this.doc.roundedRect(MARGIN, this.y, imgW, imgH, 2, 2, 'F');
     this.doc.addImage(imgData, 'PNG', MARGIN, this.y, imgW, imgH);
@@ -241,6 +250,43 @@ export class ReportService {
       this.y += lines.length * 5 + 2;
     }
     this.y += 4;
+  }
+
+  private drawChatSection(messages: ChatMessage[]): void {
+    if (!messages.length) return;
+
+    this.drawSection('Analyst Q&A');
+    this.doc.setFontSize(10);
+
+    for (const msg of messages) {
+      if (msg.role === 'user') {
+        // Question — bold, prefixed with Q:
+        this.doc.setFont('helvetica', 'bold');
+        this.doc.setTextColor(COLORS.blue);
+        const qLines: string[] = this.doc.splitTextToSize(`Q: ${msg.content}`, CONTENT_WIDTH);
+        this.ensureSpace(qLines.length * 5 + 2);
+        for (const line of qLines) {
+          this.doc.text(line, MARGIN, this.y);
+          this.y += 5;
+        }
+        this.y += 1;
+      } else {
+        // Answer — normal text, paragraph-aware
+        this.doc.setFont('helvetica', 'normal');
+        this.doc.setTextColor(COLORS.text);
+        const paragraphs = msg.content.split(/\n+/).filter((p) => p.trim());
+        for (const para of paragraphs) {
+          const aLines: string[] = this.doc.splitTextToSize(para.trim(), CONTENT_WIDTH - 4);
+          for (const line of aLines) {
+            this.ensureSpace(5);
+            this.doc.text(line, MARGIN + 4, this.y);
+            this.y += 5;
+          }
+          this.y += 2;
+        }
+        this.y += 4; // gap before next question
+      }
+    }
   }
 
   // ── plumbing ─────────────────────────────────────────

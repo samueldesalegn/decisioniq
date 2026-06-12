@@ -188,6 +188,6 @@ export class AnalysisDetail {
     if (!analysis) return;
 
     const canvas = this.chartCanvas()?.nativeElement;
-    this.report.generateExecutiveReport(analysis, canvas);
+    this.report.generateExecutiveReport(analysis, canvas, this.chatMessages());
   }
 }
