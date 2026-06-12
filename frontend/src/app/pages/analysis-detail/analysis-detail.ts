@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, signal, viewChild, ElementRef } fr
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Chart } from 'chart.js/auto';
 import { ApiService } from '../../services/api.service';
+import { ReportService } from '../../services/report.service';
 
 @Component({
   selector: 'app-analysis-detail',
@@ -12,6 +13,7 @@ import { ApiService } from '../../services/api.service';
 export class AnalysisDetail {
   private readonly api = inject(ApiService);
   private readonly route = inject(ActivatedRoute);
+  private readonly report = inject(ReportService);
 
   chartCanvas = viewChild<ElementRef<HTMLCanvasElement>>('trendChart');
 
@@ -179,5 +181,13 @@ export class AnalysisDetail {
         this.isChatLoading.set(false);
       },
     });
+  }
+
+  downloadReport(): void {
+    const analysis = this.analysis();
+    if (!analysis) return;
+
+    const canvas = this.chartCanvas()?.nativeElement;
+    this.report.generateExecutiveReport(analysis, canvas);
   }
 }

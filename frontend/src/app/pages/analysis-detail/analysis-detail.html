@@ -1,12 +1,17 @@
 <section class="analysis-page">
 
   <header class="topbar">
-    <div>
-      <p class="eyebrow">DecisionIQ Analysis</p>
-      <h1>{{ datasetType() }}</h1>
-    </div>
+  <div>
+    <p class="eyebrow">DecisionIQ Analysis</p>
+    <h1>{{ datasetType() }}</h1>
+  </div>
+  <div class="topbar-actions">
+    <button class="download-btn" (click)="downloadReport()" [disabled]="isLoading() || !analysis()">
+      ↓ Download Report
+    </button>
     <a routerLink="/analyses" class="back-link">← View history</a>
-  </header>
+  </div>
+</header>
 
   @if (isLoading()) {
     <div class="loading-state">
