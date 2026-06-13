@@ -5,6 +5,38 @@
     <p>Track uploaded datasets, decision scores, analysis quality, and recent business insights.</p>
   </div>
 
+  @if (billing(); as b) {
+    <section class="billing-card" [class.pro]="isPro()">
+      <div class="billing-info">
+        <p class="eyebrow">{{ isPro() ? 'Pro Plan' : 'Free Plan' }}</p>
+        <h2>{{ isPro() ? 'Unlimited analyses' : 'Free tier' }}</h2>
+        <p class="usage">{{ usageLabel() }}</p>
+
+        @if (!isPro()) {
+          <div class="usage-bar">
+            <div class="usage-fill" [style.width.%]="usagePercent()"></div>
+          </div>
+        }
+
+        @if (billingError()) {
+          <p class="error">{{ billingError() }}</p>
+        }
+      </div>
+
+      <div class="billing-action">
+        @if (isPro()) {
+          <button (click)="manageBilling()" [disabled]="isRedirecting()" class="manage-btn">
+            {{ isRedirecting() ? 'Opening...' : 'Manage billing' }}
+          </button>
+        } @else {
+          <button (click)="upgrade()" [disabled]="isRedirecting()" class="upgrade-btn">
+            {{ isRedirecting() ? 'Redirecting...' : 'Upgrade to Pro — $19/mo' }}
+          </button>
+        }
+      </div>
+    </section>
+  }
+
   @if (isLoading()) {
     <p class="loading">Loading dashboard...</p>
   } @else if (error()) {

@@ -5,6 +5,7 @@ import { getUserIdFromEvent } from '../utils/auth.util';
 import { failure, success } from '../utils/http-response.util';
 
 const FREE_TIER_LIMIT = 3;
+const PRO_FAIR_USE_LIMIT = 500;
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
@@ -19,7 +20,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             currentPeriodEnd: user.currentPeriodEnd ?? null,
             usage: {
                 used: usedThisMonth,
-                limit: user.plan === 'PRO' ? null : FREE_TIER_LIMIT,
+                limit: user.plan === 'PRO' ? PRO_FAIR_USE_LIMIT : FREE_TIER_LIMIT,
             },
         });
     } catch (error) {

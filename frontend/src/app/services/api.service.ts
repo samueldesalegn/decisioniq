@@ -12,7 +12,7 @@ export class ApiService {
   private readonly apiUrl = 'https://2wdb1i9pj6.execute-api.us-east-1.amazonaws.com/Prod';
 
   private getAuthHeaders() {
-    const token = this.auth.getIdToken(); // ← was getAccessToken() — API Gateway Cognito authorizer validates ID tokens
+    const token = this.auth.getIdToken(); // API Gateway Cognito authorizer validates ID tokens
 
     if (!token) {
       return {};
@@ -69,19 +69,29 @@ export class ApiService {
       this.getAuthHeaders(),
     );
   }
+
   getBillingStatus() {
     return this.http.get<{
       plan: 'FREE' | 'PRO';
-      usage: { used: number; limit: number | null };
+      subscriptionStatus: string | null;
+      currentPeriodEnd: string | null;
+      usage: { used: number; limit: number };
     }>(`${this.apiUrl}/billing/status`, this.getAuthHeaders());
   }
-  
+
   createCheckoutSession() {
-    return this.http.post<{ url: string }>(`${this.apiUrl}/billing/checkout`, {}, this.getAuthHeaders());
+    return this.http.post<{ url: string }>(
+      `${this.apiUrl}/billing/checkout`,
+      {},
+      this.getAuthHeaders(),
+    );
   }
-  
+
   createPortalSession() {
-    return this.http.post<{ url: string }>(`${this.apiUrl}/billing/portal`, {}, this.getAuthHeaders());
+    return this.http.post<{ url: string }>(
+      `${this.apiUrl}/billing/portal`,
+      {},
+      this.getAuthHeaders(),
+    );
   }
 }
-

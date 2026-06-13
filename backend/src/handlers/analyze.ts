@@ -19,6 +19,7 @@ import { getUserIdFromEvent } from '../utils/auth.util';
 
 const LARGE_FILE_THRESHOLD_BYTES = 50 * 1024 * 1024;
 const FREE_TIER_LIMIT = 3;
+const PRO_FAIR_USE_LIMIT = 500;
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
@@ -34,10 +35,19 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             return failure('Unauthorized', 401);
         }
 
-        // Billing enforcement: free tier is limited to FREE_TIER_LIMIT analyses per month
+        // Billing enforcement
         const billing = await getUserBilling(userId);
 
-        if (billing.plan !== 'PRO') {
+        if (billing.plan === 'PRO') {
+            // "Unlimited" in practice is a high fair-use ceiling, to prevent
+            // runaway Bedrock costs from scripted or abusive usage.
+            const used = await countAnalysesThisMonth(userId);
+
+            if (used >= PRO_FAIR_USE_LIMIT) {
+                return failure('Monthly fair-use limit reached. Please contact support for higher-volume needs.', 429);
+            }
+        } else {
+            // Free tier: limited to FREE_TIER_LIMIT analyses per month
             const used = await countAnalysesThisMonth(userId);
 
             if (used >= FREE_TIER_LIMIT) {

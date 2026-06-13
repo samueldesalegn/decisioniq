@@ -68,9 +68,14 @@ export class Upload {
                   this.isUploading.set(false);
 
                   if (err.status === 402) {
-                    // Free plan limit reached
+                    // Free plan limit reached → offer upgrade
                     this.error.set('You have used all 3 free analyses for this month.');
                     this.showUpgrade.set(true);
+                  } else if (err.status === 429) {
+                    // Pro fair-use cap reached → no upgrade box (already Pro)
+                    this.error.set(
+                      'You have reached the monthly fair-use limit. Please contact support for higher-volume needs.',
+                    );
                   } else {
                     this.error.set('Failed to analyze uploaded file.');
                   }
