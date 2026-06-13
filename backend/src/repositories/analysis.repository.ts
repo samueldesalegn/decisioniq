@@ -75,7 +75,8 @@ export async function findAnalysisByFileHashAndUser(
 
 /** Count analyses created by a user in the current calendar month. */
 export async function countAnalysesThisMonth(userId: string): Promise<number> {
-    const yearMonth = new Date().toISOString().slice(0, 7);
+    const yearMonth = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+
     const response = await docClient.send(
         new QueryCommand({
             TableName: tableName,
@@ -86,12 +87,6 @@ export async function countAnalysesThisMonth(userId: string): Promise<number> {
             Select: 'COUNT',
         }),
     );
-    console.log('[BILLING] countAnalysesThisMonth', {
-        tableName,
-        userId,
-        yearMonth,
-        count: response.Count,
-        scannedCount: response.ScannedCount,
-    });
+
     return response.Count ?? 0;
 }
