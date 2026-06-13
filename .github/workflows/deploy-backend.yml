@@ -45,6 +45,9 @@ jobs:
         working-directory: backend/src
         run: npm ci
 
+      - name: Clean previous SAM build
+        run: rm -rf .aws-sam
+
       - name: Build SAM application
         run: sam build
 
