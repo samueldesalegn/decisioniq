@@ -36,9 +36,16 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
         // ── Billing enforcement ──────────────────────────
         const billing = await getUserBilling(userId);
+        console.log('[BILLING] billing check', { userId, plan: billing.plan });
 
         if (billing.plan !== 'PRO') {
             const used = await countAnalysesThisMonth(userId);
+            console.log('[BILLING] usage check', {
+                userId,
+                used,
+                limit: FREE_TIER_LIMIT,
+                willBlock: used >= FREE_TIER_LIMIT,
+            });
 
             if (used >= FREE_TIER_LIMIT) {
                 return failure(
